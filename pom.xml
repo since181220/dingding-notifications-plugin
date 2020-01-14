@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.ztbsuper</groupId>
     <artifactId>dingding-notifications</artifactId>
-    <version>1.10-SNAPSHOT</version>
+    <version>1.13-SNAPSHOT</version>
     <packaging>hpi</packaging>
 
     <properties>
@@ -84,6 +84,12 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>structs</artifactId>
             <version>1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.8.1</version>
+            <scope>compile</scope>
         </dependency>
         <!--<dependency>-->
         <!--<groupId>org.jenkins-ci.plugins</groupId>-->

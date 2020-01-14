@@ -33,6 +33,8 @@ public class DingdingServiceImpl implements DingdingService {
 
     private boolean onAbort;
 
+    private String customMessage;
+
     private TaskListener listener;
 
     private AbstractBuild build;
@@ -41,12 +43,14 @@ public class DingdingServiceImpl implements DingdingService {
 
     private String api;
 
-    public DingdingServiceImpl(String jenkinsURL, String token, boolean onStart, boolean onSuccess, boolean onFailed, boolean onAbort, TaskListener listener, AbstractBuild build) {
+    public DingdingServiceImpl(String jenkinsURL, String token, boolean onStart, boolean onSuccess, boolean onFailed,
+        boolean onAbort, String customMessage, TaskListener listener, AbstractBuild build) {
         this.jenkinsURL = jenkinsURL;
         this.onStart = onStart;
         this.onSuccess = onSuccess;
         this.onFailed = onFailed;
         this.onAbort =  onAbort;
+        this.customMessage = customMessage;
         this.listener = listener;
         this.build = build;
         this.api = apiUrl + token;
@@ -57,7 +61,6 @@ public class DingdingServiceImpl implements DingdingService {
         String pic = "http://icon-park.com/imagefiles/loading7_gray.gif";
         String title = String.format("%s%s开始构建", build.getProject().getDisplayName(), build.getDisplayName());
         String content = String.format("项目[%s%s]开始构建", build.getProject().getDisplayName(), build.getDisplayName());
-
         String link = getBuildUrl();
         if (onStart) {
             logger.info("send link msg from " + listener.toString());
@@ -78,7 +81,13 @@ public class DingdingServiceImpl implements DingdingService {
     public void success() {
         String pic = "http://icons.iconarchive.com/icons/paomedia/small-n-flat/1024/sign-check-icon.png";
         String title = String.format("%s%s构建成功", build.getProject().getDisplayName(), build.getDisplayName());
-        String content = String.format("项目[%s%s]构建成功, summary:%s, duration:%s", build.getProject().getDisplayName(), build.getDisplayName(), build.getBuildStatusSummary().message, build.getDurationString());
+        String content = String.format("项目[%s%s]构建成功, summary:%s, duration:%s\n[ %s or %s and %s]",
+            build.getProject().getDisplayName(),
+            build.getDisplayName(), build.getBuildStatusSummary().message, build.getDurationString(),
+            build.getBuildVariables().getOrDefault("SCM_CHANGELOG", "not found"),
+            build.getCharacteristicEnvVars().get("SCM_CHANGELOG", "not found"),
+            customMessage);
+
 
         String link = getBuildUrl();
         logger.info(link);
