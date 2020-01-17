@@ -1,6 +1,7 @@
 package com.ztbsuper.dingding;
 
 import com.alibaba.fastjson.JSONObject;
+import hudson.EnvVars;
 import hudson.ProxyConfiguration;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
@@ -33,8 +34,6 @@ public class DingdingServiceImpl implements DingdingService {
 
     private boolean onAbort;
 
-    private String customMessage;
-
     private TaskListener listener;
 
     private AbstractBuild build;
@@ -43,24 +42,33 @@ public class DingdingServiceImpl implements DingdingService {
 
     private String api;
 
+    private EnvVars env;
+
     public DingdingServiceImpl(String jenkinsURL, String token, boolean onStart, boolean onSuccess, boolean onFailed,
-        boolean onAbort, String customMessage, TaskListener listener, AbstractBuild build) {
+        boolean onAbort, TaskListener listener, AbstractBuild build) {
         this.jenkinsURL = jenkinsURL;
         this.onStart = onStart;
         this.onSuccess = onSuccess;
         this.onFailed = onFailed;
         this.onAbort =  onAbort;
-        this.customMessage = customMessage;
         this.listener = listener;
         this.build = build;
         this.api = apiUrl + token;
+        try {
+            this.env = build.getEnvironment(listener);
+        } catch (Exception e) {
+            this.env = new EnvVars();
+            this.env.put("SCM_CHANGELOG", "new EnvVars");
+        }
     }
 
     @Override
     public void start() {
-        String pic = "http://icon-park.com/imagefiles/loading7_gray.gif";
-        String title = String.format("%s%s开始构建", build.getProject().getDisplayName(), build.getDisplayName());
-        String content = String.format("项目[%s%s]开始构建", build.getProject().getDisplayName(), build.getDisplayName());
+        String pic = ""; // http://icon-park.com/imagefiles/loading7_gray.gif";
+        String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
+        String title = String.format("%s%s开始构建,分支：%s", build.getProject().getDisplayName(), build.getDisplayName(),
+            branch);
+        String content = String.format("项目[%s%s]**开始构建**", build.getProject().getDisplayName(), build.getDisplayName());
         String link = getBuildUrl();
         if (onStart) {
             logger.info("send link msg from " + listener.toString());
@@ -79,28 +87,32 @@ public class DingdingServiceImpl implements DingdingService {
 
     @Override
     public void success() {
+        String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
         String pic = "http://icons.iconarchive.com/icons/paomedia/small-n-flat/1024/sign-check-icon.png";
-        String title = String.format("%s%s构建成功", build.getProject().getDisplayName(), build.getDisplayName());
-        String content = String.format("项目[%s%s]构建成功, summary:%s, duration:%s\n[ %s or %s and %s]",
+        String title = String.format("%s%s构建成功,分支：%s", build.getProject().getDisplayName(), build.getDisplayName(),
+            branch);
+        String content = String.format("项目[%s%s]构建成功, summary:%s, duration:%s",
             build.getProject().getDisplayName(),
-            build.getDisplayName(), build.getBuildStatusSummary().message, build.getDurationString(),
-            build.getBuildVariables().getOrDefault("SCM_CHANGELOG", "not found"),
-            build.getCharacteristicEnvVars().get("SCM_CHANGELOG", "not found"),
-            customMessage);
-
+            build.getDisplayName(), build.getBuildStatusSummary().message, build.getDurationString());
+        String changeContent = env.expand("$SCM_CHANGELOG") == null ? "NO CHANGE" : env.expand("$SCM_CHANGELOG").replaceAll("\\\\n", "\n");
+        String commitContent = String.format("项目[%s%s]构建成功 \n\n分支：%s \n\nCOMMITS:\n\n%s", build.getProject().getDisplayName(),
+            build.getDisplayName(), branch, changeContent);
 
         String link = getBuildUrl();
         logger.info(link);
         if (onSuccess) {
             logger.info("send link msg from " + listener.toString());
             sendLinkMessage(link, content, title, pic);
+            sendMarkDownMessage(title, commitContent);
         }
     }
 
     @Override
     public void failed() {
+        String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
         String pic = "http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
-        String title = String.format("%s%s构建失败", build.getProject().getDisplayName(), build.getDisplayName());
+        String title = String.format("%s%s构建失败,分支：%s", build.getProject().getDisplayName(), build.getDisplayName(),
+            branch);
         String content = String.format("项目[%s%s]构建失败, summary:%s, duration:%s", build.getProject().getDisplayName(), build.getDisplayName(), build.getBuildStatusSummary().message, build.getDurationString());
 
         String link = getBuildUrl();
@@ -113,9 +125,12 @@ public class DingdingServiceImpl implements DingdingService {
 
     @Override
     public void abort() {
+        String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
         String pic = "http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
-        String title = String.format("%s%s构建中断", build.getProject().getDisplayName(), build.getDisplayName());
-        String content = String.format("项目[%s%s]构建中断, summary:%s, duration:%s", build.getProject().getDisplayName(), build.getDisplayName(), build.getBuildStatusSummary().message, build.getDurationString());
+        String title = String.format("%s%s构建中断,分支：%s", build.getProject().getDisplayName(), build.getDisplayName(),
+            branch);
+        String content = String.format("项目[%s%s]构建中断, summary:%s, duration:%s", build.getProject().getDisplayName(),
+            build.getDisplayName(), build.getBuildStatusSummary().message, build.getDurationString());
 
         String link = getBuildUrl();
         logger.info(link);
@@ -125,25 +140,29 @@ public class DingdingServiceImpl implements DingdingService {
         }
     }
 
-    private void sendTextMessage(String msg) {
-
+    private void sendMarkDownMessage(String title, String msg) {
+        JSONObject body = new JSONObject();
+        body.put("msgtype", "markdown");
+        JSONObject markdownObject = new JSONObject();
+        markdownObject.put("title", title);
+        markdownObject.put("text", msg);
+        body.put("markdown", markdownObject);
+        doPost(body);
     }
 
-    private void sendLinkMessage(String link, String msg, String title, String pic) {
+    private void sendTextMessage(String msg) {
+        JSONObject body = new JSONObject();
+        body.put("msgtype", "text");
+        JSONObject textObject = new JSONObject();
+        textObject.put("content", msg);
+        body.put("text", textObject);
+
+        doPost(body);
+    }
+
+    private void doPost(JSONObject body) {
         HttpClient client = getHttpClient();
         PostMethod post = new PostMethod(api);
-
-        JSONObject body = new JSONObject();
-        body.put("msgtype", "link");
-
-
-        JSONObject linkObject = new JSONObject();
-        linkObject.put("text", msg);
-        linkObject.put("title", title);
-        linkObject.put("picUrl", pic);
-        linkObject.put("messageUrl", link);
-
-        body.put("link", linkObject);
         try {
             post.setRequestEntity(new StringRequestEntity(body.toJSONString(), "application/json", "UTF-8"));
         } catch (UnsupportedEncodingException e) {
@@ -159,6 +178,18 @@ public class DingdingServiceImpl implements DingdingService {
         post.releaseConnection();
     }
 
+    private void sendLinkMessage(String link, String msg, String title, String pic) {
+        JSONObject body = new JSONObject();
+        body.put("msgtype", "link");
+        JSONObject linkObject = new JSONObject();
+        linkObject.put("text", msg);
+        linkObject.put("title", title);
+        linkObject.put("picUrl", pic);
+        linkObject.put("messageUrl", link);
+        body.put("link", linkObject);
+
+        doPost(body);
+    }
 
     private HttpClient getHttpClient() {
         HttpClient client = new HttpClient();
