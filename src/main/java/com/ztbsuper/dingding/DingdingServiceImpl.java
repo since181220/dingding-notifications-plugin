@@ -66,7 +66,7 @@ public class DingdingServiceImpl implements DingdingService {
     public void start() {
         String pic = ""; // http://icon-park.com/imagefiles/loading7_gray.gif";
         String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
-        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER");
+        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER"); // 依赖插件：build-user-vars-plugin
         String title = String.format("%s%s开始构建，分支：%s，打包人：%s", build.getProject().getDisplayName(), build.getDisplayName(),
             branch, user);
         String content = String.format("项目[%s%s]**开始构建**", build.getProject().getDisplayName(), build.getDisplayName());
@@ -89,7 +89,7 @@ public class DingdingServiceImpl implements DingdingService {
     @Override
     public void success() {
         String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
-        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER");
+        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER"); // 依赖插件：build-user-vars-plugin
         String pic = "http://icons.iconarchive.com/icons/paomedia/small-n-flat/1024/sign-check-icon.png";
         String title = String.format("%s%s构建成功，分支：%s，打包人：%s", build.getProject().getDisplayName(), build.getDisplayName(),
             branch, user);
@@ -112,7 +112,7 @@ public class DingdingServiceImpl implements DingdingService {
     @Override
     public void failed() {
         String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
-        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER");
+        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER"); // 依赖插件：build-user-vars-plugin
         String pic = "http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
         String title = String.format("%s%s构建失败，分支：%s，打包人：%s", build.getProject().getDisplayName(), build.getDisplayName(),
             branch, user);
@@ -129,7 +129,7 @@ public class DingdingServiceImpl implements DingdingService {
     @Override
     public void abort() {
         String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
-        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER");
+        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER"); // 依赖插件：build-user-vars-plugin
         String pic = "http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
         String title = String.format("%s%s构建中断，分支：%s，打包人：%s", build.getProject().getDisplayName(), build.getDisplayName(),
             branch, user);
