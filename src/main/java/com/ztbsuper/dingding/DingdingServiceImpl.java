@@ -66,8 +66,9 @@ public class DingdingServiceImpl implements DingdingService {
     public void start() {
         String pic = ""; // http://icon-park.com/imagefiles/loading7_gray.gif";
         String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
-        String title = String.format("%s%s开始构建,分支：%s", build.getProject().getDisplayName(), build.getDisplayName(),
-            branch);
+        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER");
+        String title = String.format("%s%s开始构建，分支：%s，打包人：%s", build.getProject().getDisplayName(), build.getDisplayName(),
+            branch, user);
         String content = String.format("项目[%s%s]**开始构建**", build.getProject().getDisplayName(), build.getDisplayName());
         String link = getBuildUrl();
         if (onStart) {
@@ -88,9 +89,10 @@ public class DingdingServiceImpl implements DingdingService {
     @Override
     public void success() {
         String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
+        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER");
         String pic = "http://icons.iconarchive.com/icons/paomedia/small-n-flat/1024/sign-check-icon.png";
-        String title = String.format("%s%s构建成功,分支：%s", build.getProject().getDisplayName(), build.getDisplayName(),
-            branch);
+        String title = String.format("%s%s构建成功，分支：%s，打包人：%s", build.getProject().getDisplayName(), build.getDisplayName(),
+            branch, user);
         String content = String.format("项目[%s%s]构建成功, summary:%s, duration:%s",
             build.getProject().getDisplayName(),
             build.getDisplayName(), build.getBuildStatusSummary().message, build.getDurationString());
@@ -110,9 +112,10 @@ public class DingdingServiceImpl implements DingdingService {
     @Override
     public void failed() {
         String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
+        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER");
         String pic = "http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
-        String title = String.format("%s%s构建失败,分支：%s", build.getProject().getDisplayName(), build.getDisplayName(),
-            branch);
+        String title = String.format("%s%s构建失败，分支：%s，打包人：%s", build.getProject().getDisplayName(), build.getDisplayName(),
+            branch, user);
         String content = String.format("项目[%s%s]构建失败, summary:%s, duration:%s", build.getProject().getDisplayName(), build.getDisplayName(), build.getBuildStatusSummary().message, build.getDurationString());
 
         String link = getBuildUrl();
@@ -126,9 +129,10 @@ public class DingdingServiceImpl implements DingdingService {
     @Override
     public void abort() {
         String branch = env.expand("$branch") == null ? env.expand("$BRANCH") : env.expand("$branch");
+        String user = env.expand("$BUILD_USER") == null ? "未知用户" : env.expand("$BUILD_USER");
         String pic = "http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
-        String title = String.format("%s%s构建中断,分支：%s", build.getProject().getDisplayName(), build.getDisplayName(),
-            branch);
+        String title = String.format("%s%s构建中断，分支：%s，打包人：%s", build.getProject().getDisplayName(), build.getDisplayName(),
+            branch, user);
         String content = String.format("项目[%s%s]构建中断, summary:%s, duration:%s", build.getProject().getDisplayName(),
             build.getDisplayName(), build.getBuildStatusSummary().message, build.getDurationString());
 
